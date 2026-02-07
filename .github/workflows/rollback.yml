@@ -1,0 +1,36 @@
+# Rollback: restore previous deployment on IIS (swap site with site_previous).
+# Trigger: manual only. Run after a bad deploy to restore the last known good state.
+
+name: Rollback IIS
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Restore previous site (PowerShell over SSH)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_SSH_PORT || 22 }}
+          script_stderr: true
+          script: |
+            $path = "${{ secrets.DEPLOY_IIS_PATH }}".TrimEnd('/').Replace('/', '\\')
+            $parent = Split-Path -Parent $path
+            $leaf = Split-Path -Leaf $path
+            $backupPath = Join-Path $parent ($leaf + '_previous')
+            $failedPath = Join-Path $parent ($leaf + '_failed')
+            if (-not (Test-Path $backupPath)) {
+              Write-Error "No backup found at $backupPath. Nothing to rollback."
+              exit 1
+            }
+            if (Test-Path $path) {
+              if (Test-Path $failedPath) { Remove-Item -Recurse -Force $failedPath }
+              Rename-Item -Path $path -NewName ($leaf + '_failed')
+            }
+            Rename-Item -Path $backupPath -NewName $leaf
+            Write-Host "Rollback done. Current site is now the previous deployment."

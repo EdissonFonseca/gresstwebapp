@@ -1,0 +1,117 @@
+---
+description: Global architecture rules for React + Vite, TypeScript, and Feature-Driven structure
+alwaysApply: true
+---
+
+# Project Architecture (React + Vite, Feature-Driven)
+
+This project uses **React**, **Vite**, **strict TypeScript**, and a **Feature-Driven** architecture. All code must follow these rules.
+
+## Stack
+
+- **React** + **Vite**
+- **TypeScript** with strict mode (`strict: true`)
+- **Feature-Driven** folder structure
+
+## Mandatory Rules
+
+### 1. Feature-Driven Structure
+
+- **All functionality must live inside a feature.** No standalone pages, services, or hooks at the root of `src` that belong to a specific domain.
+- Each feature is a self-contained folder (e.g. `src/features/auth`, `src/features/dashboard`).
+
+### 2. Feature Folder Contract
+
+Every feature **must** contain:
+
+- `components/` — UI components for the feature
+- `hooks/` — feature-specific hooks (data, side effects, local state)
+- `services/` — API calls, external integrations, business workflows
+- `types/` — TypeScript types and interfaces for the feature
+- `tests/` — unit and integration tests for the feature
+
+Optional: `utils/`, `constants/`, `api/` if the feature needs them. Do not create "god" files; split by responsibility.
+
+Example:
+
+```
+src/features/auth/
+  components/
+  hooks/
+  services/
+  types/
+  tests/
+  index.ts   # public API of the feature
+```
+
+### 3. No Business Logic in UI Components
+
+- **UI components must be presentational only.** They receive data and callbacks via props; they do not fetch data, call APIs, or contain domain rules.
+- Data fetching, validation, and business rules live in **hooks** or **services**. Components consume hooks and pass props down.
+
+```typescript
+// ❌ BAD: business logic in component
+function UserCard() {
+  const [user, setUser] = useState(null);
+  useEffect(() => {
+    fetch('/api/user').then(r => r.json()).then(setUser);
+  }, []);
+  if (!user?.isVerified) return null;
+  return <div>{user.name}</div>;
+}
+
+// ✅ GOOD: logic in hook, component presentational
+function useCurrentUser() {
+  const [user, setUser] = useState<User | null>(null);
+  useEffect(() => { /* fetch */ }, []);
+  return { user };
+}
+function UserCard({ user }: { user: User }) {
+  if (!user.isVerified) return null;
+  return <div>{user.name}</div>;
+}
+```
+
+### 4. Strict Typing (No `any`)
+
+- **No `any`.** Use `unknown` and narrow with type guards, or define proper types/interfaces.
+- Prefer explicit return types on functions and typed hooks. Use generics where it improves type safety.
+
+### 5. Composition Over Inheritance
+
+- Prefer **composition** (small components, render props, slots, hooks) over class inheritance or deep component hierarchies.
+- Reuse behavior via hooks and small components, not base classes or giant wrappers.
+
+### 6. No "God" Files
+
+- Do not create single files that handle many unrelated responsibilities (e.g. one "utils.ts" with dozens of unrelated functions).
+- Split by feature or by concern: one clear purpose per file, grouped under the feature folder.
+
+### 7. Tests for New Features
+
+- **Every new feature must include tests.** At minimum: tests for services and hooks that contain logic; component tests for non-trivial UI.
+- Place tests in the feature’s `tests/` folder (or colocated `*.test.ts` / `*.spec.ts` next to the module).
+
+### 8. Document Technical Decisions
+
+- Document non-obvious architecture or tech decisions in the codebase (e.g. short ADRs in `docs/adr/` or a short `README.md` in the feature or in project root).
+- When introducing a new pattern or dependency, add a brief note on why it was chosen so future changes stay consistent.
+
+## Shared Code
+
+- **Shared UI** (design system, layout): use a dedicated folder (e.g. `src/shared/ui` or `src/components`) and keep it free of feature-specific business logic.
+- **Shared types/utils**: use `src/shared/types`, `src/shared/utils`, or similar; keep files focused and avoid god files.
+
+## Summary Checklist
+
+When adding or reviewing code:
+
+- [ ] New code lives under a feature folder (or under `shared/` if truly global).
+- [ ] Feature has `components`, `hooks`, `services`, `types`, and `tests`.
+- [ ] No business logic in UI components; logic in hooks/services.
+- [ ] No `any`; types are explicit.
+- [ ] Composition over inheritance.
+- [ ] No god files; single responsibility per file.
+- [ ] New features include tests.
+- [ ] Technical decisions documented where relevant.
+- [ ] After adding a new feature, run `npm run docs:generate` to update feature READMEs and docs index.

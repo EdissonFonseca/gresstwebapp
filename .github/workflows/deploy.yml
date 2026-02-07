@@ -1,0 +1,94 @@
+# Deploy static artifact to Windows IIS.
+# Trigger: manual (workflow_dispatch) or after successful Build on main.
+# Server: Windows with IIS and OpenSSH (or use self-hosted Windows runner).
+
+name: Deploy to IIS
+
+on:
+  workflow_dispatch:
+    inputs:
+      artifact_run_id:
+        description: 'Run ID with artifact (empty = latest successful Build)'
+        required: false
+        type: string
+  workflow_run:
+    workflows: [Build]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: Resolve artifact run
+        id: artifact
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const inputRunId = '${{ github.event.inputs.artifact_run_id }}';
+            if (inputRunId) {
+              core.setOutput('run_id', inputRunId);
+              return;
+            }
+            if (github.event.workflow_run) {
+              core.setOutput('run_id', github.event.workflow_run.id);
+              return;
+            }
+            const { data: runs } = await github.rest.actions.listWorkflowRunsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'build.yml',
+              branch: context.payload.repository.default_branch || 'main',
+              status: 'success',
+              per_page: 1
+            });
+            if (runs.workflow_runs.length === 0) throw new Error('No successful Build run found');
+            core.setOutput('run_id', runs.workflow_runs[0].id);
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ steps.artifact.outputs.run_id }}
+          pattern: 'dist-*'
+          merge-multiple: true
+
+      - name: Prepare deploy bundle
+        run: |
+          mkdir -p deploy
+          if [ -d dist ]; then
+            cp -r dist/* deploy/
+          else
+            dir=$(ls -d dist-* 2>/dev/null | head -1)
+            if [ -n "$dir" ]; then cp -r "$dir"/* deploy/; else cp -r . deploy/; fi
+          fi
+          ls -la deploy/
+
+      - name: Backup current site on server (PowerShell over SSH)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_SSH_PORT || 22 }}
+          script_stderr: true
+          script: |
+            $path = "${{ secrets.DEPLOY_IIS_PATH }}".TrimEnd('/').Replace('/', '\\')
+            $parent = Split-Path -Parent $path
+            $leaf = Split-Path -Leaf $path
+            $backupPath = Join-Path $parent ($leaf + '_previous')
+            if (Test-Path $path) {
+              if (Test-Path $backupPath) { Remove-Item -Recurse -Force $backupPath }
+              Rename-Item -Path $path -NewName ($leaf + '_previous')
+            }
+            New-Item -ItemType Directory -Path $path -Force | Out-Null
+
+      - name: Copy files to IIS path (SCP)
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_SSH_PORT || 22 }}
+          source: 'deploy/*'
+          target: '${{ secrets.DEPLOY_IIS_PATH }}'

@@ -1,0 +1,22 @@
+.main-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-layout__header {
+  flex-shrink: 0;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--layout-border, #e5e7eb);
+  background: var(--layout-header-bg, #fff);
+}
+
+.main-layout__brand {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.main-layout__main {
+  flex: 1;
+  padding: 1.5rem;
+}

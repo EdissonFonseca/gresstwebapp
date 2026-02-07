@@ -1,0 +1,1 @@
+export { fetchUserProfile } from './profileApi';
