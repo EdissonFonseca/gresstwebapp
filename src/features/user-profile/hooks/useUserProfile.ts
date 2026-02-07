@@ -22,13 +22,13 @@ export function useUserProfile() {
       if (
         typeof data !== 'object' ||
         data === null ||
-        typeof (data as UserProfile).displayName !== 'string' ||
-        typeof (data as UserProfile).email !== 'string'
+        typeof data.email !== 'string' ||
+        typeof data.displayName !== 'string'
       ) {
         setState({ status: 'error', message: 'Invalid response from server' });
         return;
       }
-      setState({ status: 'success', data: data as UserProfile });
+      setState({ status: 'success', data });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load profile';
       setState({ status: 'error', message });

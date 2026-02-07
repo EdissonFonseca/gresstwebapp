@@ -1,0 +1,37 @@
+---
+description: Commit messages must have a subject line and an optional body
+alwaysApply: true
+---
+
+# Commit message format
+
+When generating or suggesting commit messages (including for "dame el texto para el commit" or similar requests), **always** use this format:
+
+1. **Subject (first line)**
+   - One line, imperative mood, ~50 characters or less.
+   - No period at the end.
+   - Examples: `Add profile API integration`, `Fix CORS with dev proxy`, `Disable mock when proxy is used`.
+
+2. **Body (optional but recommended)**
+   - One blank line after the subject.
+   - Wrap at ~72 characters. Explain what and why, not how.
+   - Use bullet points for multiple changes when helpful.
+
+3. **Output for the user**
+   - Provide both a **short** version (subject only, for `git commit -m "..."`) and a **full** version (subject + body) for `git commit` without `-m` (so the editor opens and they can paste the full message).
+
+**Example full message:**
+
+```
+Integrate profile API and fix local QA testing
+
+- Profile: real endpoint GET /api/me/profile, show only name and email
+- Dev: VITE_DEV_BEARER_TOKEN and proxy (VITE_PROXY_API_TARGET) for CORS
+- Disable mock when proxy is used so real API is called
+- Docs and .env.example updated
+```
+
+**Example short (subject only):**  
+`Integrate profile API, dev proxy for CORS, and Bearer token for QA testing`
+
+When the user asks only for "el texto para el commit" or "commit message", offer both the one-line subject and the full subject+body so they can choose.

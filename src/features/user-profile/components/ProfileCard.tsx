@@ -27,27 +27,11 @@ export function ProfileCard({ profile, actions }: ProfileCardProps) {
         </div>
       )}
       <dl className="profile-card__fields">
-        <ProfileField label="Display name" value={profile.displayName} />
+        <ProfileField label="Name" value={profile.displayName} />
         <ProfileField label="Email" value={profile.email} />
-        {profile.createdAt && (
-          <ProfileField label="Member since" value={formatDate(profile.createdAt)} />
-        )}
       </dl>
       {actions ? <div className="profile-card__actions">{actions}</div> : null}
     </article>
   );
 }
 
-function formatDate(iso: string): string {
-  try {
-    const formatted = new Date(iso).toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-    if (formatted === 'Invalid Date') return iso;
-    return formatted;
-  } catch {
-    return iso;
-  }
-}

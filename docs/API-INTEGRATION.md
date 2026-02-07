@@ -6,15 +6,22 @@ All backend calls are **browser-side** and **decoupled** from any legacy backend
 
 | Variable | Description |
 |----------|-------------|
-| `VITE_API_BASE_URL` | Base URL for the API (e.g. `https://api.example.com`). No trailing slash. |
+| `VITE_API_BASE_URL` | Base URL for the API (e.g. `https://qa.api.gresst.com`). No trailing slash. |
 | `VITE_API_USE_CREDENTIALS` | Set to `"true"` to send cookies with requests (e.g. httpOnly cookie auth). |
+| `VITE_DEV_BEARER_TOKEN` | **Dev only.** Bearer token for local testing when the server normally uses HttpOnly cookie. See below. |
 
 Copy `.env.example` to `.env` and set these for local development.
 
 ## Authentication (JWT)
 
 - **Token in headers (default):** After login, store the JWT with `setToken(token)` from `useAuthContext()`. The token is persisted in `localStorage` and sent on every request via the `Authorization: Bearer <token>` header.
-- **Token in cookies:** If the backend sets an httpOnly cookie, set `VITE_API_USE_CREDENTIALS=true`. The client will send `credentials: 'include'`; no token is stored in the app.
+- **Token in cookies (production):** If the backend sets an httpOnly cookie, set `VITE_API_USE_CREDENTIALS=true`. The client will send `credentials: 'include'`; the cookie is sent automatically and no token is stored in the app.
+- **Testing when the server uses HttpOnly cookie:** From localhost you cannot read that cookie. To call QA (e.g. `https://qa.api.gresst.com`) with a Bearer token:
+  1. Get a token (e.g. log in via **Swagger UI** at the API base URL and copy the token from the response or from the “Authorize” dialog).
+  2. In `.env` set `VITE_DEV_BEARER_TOKEN=<paste the token>` (no `Bearer ` prefix). Do **not** commit `.env`.
+  3. Run `npm run dev`. The interceptor will send `Authorization: Bearer <token>` on every request. If you also log in via the app and call `setToken()`, the value in localStorage takes precedence.
+
+- **CORS (localhost blocked):** If the API does not allow `http://localhost:5173`, the browser blocks requests. Use the **dev proxy**: in `.env` set `VITE_API_BASE_URL=` (empty) and `VITE_PROXY_API_TARGET=https://qa.api.gresst.com`. The app then sends requests to the same origin (localhost), and Vite proxies `/api/*` to that target so the browser never talks to the API directly and CORS does not apply.
 
 ## Request flow
 
@@ -38,7 +45,7 @@ Use the HTTP client from feature services or hooks:
 ```ts
 import { get, post } from '@core/http';
 
-const data = await get<Profile>('/api/profile');
+const data = await get<Profile>('/api/me/profile');
 await post('/api/logout', {});
 ```
 
@@ -48,7 +55,7 @@ All requests use the same base URL, interceptors, and error handling. No direct 
 
 When running `npm run dev` **without** a real backend, the profile page would get HTML or 404 from the dev server. To avoid that, the Vite dev server includes a **mock** so you can see the profile UI with sample data.
 
-- **What it does:** Any `GET /api/profile` request to the dev server (same origin, so when `VITE_API_BASE_URL` is unset or points to the same host) is intercepted and answered with JSON from `scripts/mocks/profile.json`.
-- **Where the data lives:** `scripts/mocks/profile.json`. Edit that file to change the mock user (id, email, displayName, avatarUrl, createdAt). The shape must match the `UserProfile` type used by the app.
+- **What it does:** Any `GET /api/me/profile` request to the dev server (same origin, so when `VITE_API_BASE_URL` is unset or points to the same host) is intercepted and answered with JSON from `scripts/mocks/profile.json`.
+- **Where the data lives:** `scripts/mocks/profile.json`. Edit that file to change the mock user. The shape must match the profile API response (id, accountId, firstName, lastName, name, email, status, isActive, personId, lastAccess, createdAt).
 - **When it applies:** Only in development (`vite` dev server). The mock is **not** included in the production build; in production the app always calls the real API.
 - **Using a real API in dev:** Set `VITE_API_BASE_URL` to your backend (e.g. `https://api.example.com`). Then the app will request that host and the Vite mock is not used.

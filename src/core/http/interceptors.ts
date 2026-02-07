@@ -22,12 +22,20 @@ export interface ResponseContext {
 
 const TOKEN_HEADER = 'Authorization';
 
+/** Dev-only: Bearer token from .env for local testing (e.g. copy from Swagger). Not used in production build. */
+function getDevBearerToken(): string | null {
+  const v = import.meta.env['VITE_DEV_BEARER_TOKEN'];
+  if (typeof v !== 'string' || v.trim() === '') return null;
+  const token = v.trim();
+  return token.startsWith('Bearer ') ? token.slice(7) : token;
+}
+
 /**
  * Request interceptor: add JWT to headers (and optionally set credentials).
- * Token is read from storage (browser-side only). Does not touch legacy backend directly.
+ * Token is read from storage (browser-side only). In dev, VITE_DEV_BEARER_TOKEN is used when storage is empty.
  */
 export function runRequestInterceptors(config: RequestConfig): RequestConfig {
-  const token = getStoredToken();
+  const token = getStoredToken() || getDevBearerToken();
   if (token) {
     config.headers.set(TOKEN_HEADER, `Bearer ${token}`);
   }

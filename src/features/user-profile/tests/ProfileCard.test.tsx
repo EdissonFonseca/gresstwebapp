@@ -10,11 +10,12 @@ const mockProfile: UserProfile = {
 };
 
 describe('ProfileCard', () => {
-  it('renders profile without avatar', () => {
+  it('renders profile without avatar (name and email only)', () => {
     render(<ProfileCard profile={mockProfile} />);
+    expect(screen.getByText('Name')).toBeInTheDocument();
+    expect(screen.getByText('Email')).toBeInTheDocument();
     expect(screen.getByText('Jane Doe')).toBeInTheDocument();
     expect(screen.getByText('jane@example.com')).toBeInTheDocument();
-    expect(screen.getByText(/January \d+, 2024/)).toBeInTheDocument();
     expect(screen.getByText('J')).toBeInTheDocument(); // initial in placeholder
   });
 
@@ -38,10 +39,4 @@ describe('ProfileCard', () => {
     expect(screen.getByRole('article', { name: 'User profile' })).toBeInTheDocument();
   });
 
-  it('formats invalid createdAt as raw string', () => {
-    render(
-      <ProfileCard profile={{ ...mockProfile, createdAt: 'not-a-date' }} />
-    );
-    expect(screen.getByText('not-a-date')).toBeInTheDocument();
-  });
 });

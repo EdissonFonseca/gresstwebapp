@@ -1,7 +1,13 @@
 {
-  "id": "dev-user-001",
+  "id": "38",
+  "accountId": "3",
+  "firstName": "Dev",
+  "lastName": "User",
+  "name": "Dev User",
   "email": "dev@example.com",
-  "displayName": "Dev User",
-  "avatarUrl": null,
-  "createdAt": "2024-01-15T10:00:00.000Z"
+  "status": "A",
+  "isActive": true,
+  "personId": "51654778",
+  "lastAccess": null,
+  "createdAt": "2026-02-07T18:55:43.6315281Z"
 }
