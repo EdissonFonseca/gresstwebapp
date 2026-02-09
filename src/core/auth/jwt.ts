@@ -8,6 +8,8 @@ import type { AuthUser } from './types';
 interface JwtPayload {
   sub?: string;
   email?: string;
+  unique_name?: string;
+  role?: string;
   [key: string]: unknown;
 }
 
@@ -41,13 +43,18 @@ export function decodeJwtPayload(token: string): JwtPayload | null {
 }
 
 /**
- * Extract AuthUser from JWT payload (sub → id, email).
+ * Extract AuthUser from JWT payload (sub → id, email, unique_name → displayName).
  */
 export function userFromJwtPayload(payload: JwtPayload | null): AuthUser | null {
   if (!payload || typeof payload.sub !== 'string') return null;
+  const displayName =
+    typeof payload.unique_name === 'string' ? payload.unique_name.trim() : undefined;
+  const role = typeof payload.role === 'string' ? payload.role.trim() : undefined;
   return {
     id: payload.sub,
     email: typeof payload.email === 'string' ? payload.email : undefined,
+    displayName: displayName ?? undefined,
+    role: role || undefined,
   };
 }
 

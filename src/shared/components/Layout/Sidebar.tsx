@@ -1,34 +1,13 @@
 import { NavLink } from 'react-router-dom';
-import { getMenuExternalLinks } from '@shared/constants';
+import { getMenuOptionGroups, getDefaultMenuOptionGroups, getMenuExternalLinks } from '@shared/constants';
+import { getMenuIconComponent } from './menuIcons';
 import './Sidebar.css';
 
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
-}
-
-/** Paths must match ROUTES in @core/routing to avoid loading that module at top level (test env). */
-const NAV_ITEMS = [
-  { to: '/', label: 'Home', icon: HomeIcon },
-  { to: '/profile', label: 'Profile', icon: ProfileIcon },
-] as const;
-
-function HomeIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-      <polyline points="9 22 9 12 15 12 15 22" />
-    </svg>
-  );
-}
-
-function ProfileIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
-  );
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
 function ExternalLinkIcon({ className }: { className?: string }) {
@@ -41,15 +20,36 @@ function ExternalLinkIcon({ className }: { className?: string }) {
   );
 }
 
+function MenuIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <line x1="3" y1="12" x2="21" y2="12" />
+      <line x1="3" y1="18" x2="21" y2="18" />
+    </svg>
+  );
+}
+
+function isExternalUrl(url: string): boolean {
+  return url.startsWith('http://') || url.startsWith('https://');
+}
+
 /**
- * Collapsible sidebar. Collapsed: narrow strip with icons; expanded: full width with labels.
+ * Sidebar: deploys from the left on click or hover. Options grouped by IdOpcionSuperior (subdivisions);
+ * only items (descripcion) are links. Uses VITE_MENU_OPTIONS from Excel or default Gresst menu.
  */
-export function Sidebar({ isOpen, onToggle }: SidebarProps) {
+export function Sidebar({ isOpen, onToggle, onMouseEnter, onMouseLeave }: SidebarProps) {
+  const envGroups = getMenuOptionGroups();
+  const groups = envGroups.length > 0 ? envGroups : getDefaultMenuOptionGroups();
+  const externalLinks = getMenuExternalLinks();
+
   return (
     <aside
       className={`sidebar ${isOpen ? 'sidebar--open' : 'sidebar--closed'}`}
       aria-label="Main navigation"
       aria-expanded={isOpen}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       <button
         type="button"
@@ -58,30 +58,46 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
         aria-label={isOpen ? 'Collapse menu' : 'Expand menu'}
         title={isOpen ? 'Collapse menu' : 'Expand menu'}
       >
-        <ChevronIcon isOpen={isOpen} />
+        {isOpen ? <ChevronIcon isOpen /> : <MenuIcon />}
       </button>
       <nav className="sidebar__nav">
-        {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) =>
-              `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`
-            }
-            end={to === '/'}
-          >
-            <span className="sidebar__icon" aria-hidden>
-              <Icon />
-            </span>
-            {isOpen && <span className="sidebar__label">{label}</span>}
-          </NavLink>
+        {groups.map((group) => (
+          <div key={group.idOpcionSuperior} className="sidebar__group" role="group">
+            {group.items.map((item) => {
+              const MenuItemIcon = getMenuIconComponent(item);
+              return isExternalUrl(item.url) ? (
+                <a
+                  key={`${item.url}-${item.descripcion}`}
+                  href={item.url}
+                  className="sidebar__link sidebar__link--external"
+                >
+                  <span className="sidebar__icon" aria-hidden>
+                    <MenuItemIcon />
+                  </span>
+                  {isOpen && <span className="sidebar__label">{item.descripcion}</span>}
+                </a>
+              ) : (
+                <NavLink
+                  key={`${item.url}-${item.descripcion}`}
+                  to={item.url}
+                  className={({ isActive }) =>
+                    `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`
+                  }
+                  end={item.url === '/'}
+                >
+                  <span className="sidebar__icon" aria-hidden>
+                    <MenuItemIcon />
+                  </span>
+                  {isOpen && <span className="sidebar__label">{item.descripcion}</span>}
+                </NavLink>
+              );
+            })}
+          </div>
         ))}
-        {getMenuExternalLinks().map(({ label, url }) => (
+        {externalLinks.map(({ label, url }) => (
           <a
             key={url}
             href={url}
-            target="_blank"
-            rel="noopener noreferrer"
             className="sidebar__link sidebar__link--external"
           >
             <span className="sidebar__icon" aria-hidden>

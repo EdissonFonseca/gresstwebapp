@@ -7,6 +7,10 @@ export type AuthStatus = 'idle' | 'authenticated' | 'unauthenticated' | 'loading
 export interface AuthUser {
   id: string;
   email?: string;
+  /** Display name (e.g. from JWT unique_name). */
+  displayName?: string;
+  /** Role from JWT (e.g. "User", "AccountAdministrator"). Used for UI (e.g. show admin menu). */
+  role?: string;
   [key: string]: unknown;
 }
 

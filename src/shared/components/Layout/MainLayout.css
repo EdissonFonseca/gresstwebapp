@@ -13,14 +13,31 @@
 
 .main-layout__header {
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
   padding: 1rem 1.5rem;
   border-bottom: 1px solid var(--layout-border, #e5e7eb);
   background: var(--layout-header-bg, #fff);
 }
 
-.main-layout__brand {
-  font-size: 1.25rem;
-  font-weight: 600;
+.main-layout__branding {
+  display: flex;
+  align-items: center;
+}
+
+.main-layout__client-logo {
+  display: block;
+  height: 2rem;
+  width: auto;
+  object-fit: contain;
+}
+
+.main-layout__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .main-layout__main {

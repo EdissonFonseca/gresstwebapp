@@ -3,7 +3,7 @@
  * Runs in browser only; token from storage (headers). Optional cookie mode via config.
  */
 
-import { getStoredToken } from '@core/auth/storage';
+import { getStoredToken, isLogoutRequested } from '@core/auth/storage';
 
 export interface RequestConfig {
   url: string;
@@ -51,7 +51,10 @@ function getCookieToken(): string | null {
  * Cookie is only read if not HttpOnly; otherwise set VITE_API_USE_CREDENTIALS=true and let the backend read the cookie.
  */
 export function runRequestInterceptors(config: RequestConfig): RequestConfig {
-  const token = getStoredToken() || getDevBearerToken() || getCookieToken();
+  const token =
+    getStoredToken() ||
+    (!isLogoutRequested() && getDevBearerToken()) ||
+    getCookieToken();
   if (token) {
     config.headers.set(TOKEN_HEADER, `Bearer ${token}`);
   }

@@ -14,6 +14,7 @@
 | Doc | Description |
 |-----|-------------|
 | [API integration](API-INTEGRATION.md) | HTTP client, JWT, interceptors, env |
+| [Menu options](MENU-OPTIONS.md) | Sidebar from Opciones Gresst.xlsx (IdOpcionSuperior, descripcion, url) |
 | [Testing](TESTING.md) | Strategy, coverage, feature checklist |
 | [CI/CD](CI-CD.md) | Build, deploy to IIS, rollback |
 | [Migration from WebForms](MIGRATION-WEBFORMS.md) | Page-by-page migration, one .aspx = one feature |
