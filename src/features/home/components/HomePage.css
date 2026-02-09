@@ -1,0 +1,38 @@
+.home-page {
+  min-height: 12rem;
+}
+
+.home-page__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+.home-page__intro {
+  margin: 0 0 1.5rem;
+  color: var(--color-muted-text, #6b7280);
+}
+
+.home-page__nav {
+  margin: 0;
+}
+
+.home-page__link {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: var(--color-primary-bg, #3b82f6);
+  color: var(--color-primary-fg, #fff);
+  text-decoration: none;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  transition: opacity 0.15s;
+}
+
+.home-page__link:hover {
+  opacity: 0.9;
+}
+
+.home-page__link:focus-visible {
+  outline: 2px solid var(--focus-ring, #3b82f6);
+  outline-offset: 2px;
+}

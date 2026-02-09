@@ -7,7 +7,7 @@ All backend calls are **browser-side** and **decoupled** from any legacy backend
 | Variable | Description |
 |----------|-------------|
 | `VITE_API_BASE_URL` | Base URL for the API (e.g. `https://qa.api.gresst.com`). No trailing slash. |
-| `VITE_API_USE_CREDENTIALS` | Set to `"true"` to send cookies with requests (e.g. httpOnly cookie auth). |
+| `VITE_API_USE_CREDENTIALS` | Set to `"true"` to send cookies with every request. **Required** when the token is in an HttpOnly cookie (e.g. `gresst_access_token`). The backend must then read the token from the Cookie header. |
 | `VITE_DEV_BEARER_TOKEN` | **Dev only.** Bearer token for local testing when the server normally uses HttpOnly cookie. See below. |
 
 Copy `.env.example` to `.env` and set these for local development.
@@ -16,6 +16,12 @@ Copy `.env.example` to `.env` and set these for local development.
 
 - **Token in headers (default):** After login, store the JWT with `setToken(token)` from `useAuthContext()`. The token is persisted in `localStorage` and sent on every request via the `Authorization: Bearer <token>` header.
 - **Token in cookies (production):** If the backend sets an httpOnly cookie, set `VITE_API_USE_CREDENTIALS=true`. The client will send `credentials: 'include'`; the cookie is sent automatically and no token is stored in the app.
+
+- **Token in HttpOnly cookie (e.g. `gresst_access_token` set by another app):** JavaScript cannot read HttpOnly cookies. Do the following:
+  1. **Frontend:** Set `VITE_API_USE_CREDENTIALS=true` in `.env` (or in the build env for the deployed app). The HTTP client will then call `fetch(..., { credentials: 'include' })`, so the browser sends the cookie with every request to the API.
+  2. **Backend:** The API must accept the token from the **Cookie** header. When it does not receive `Authorization: Bearer <token>`, it should read the cookie named `gresst_access_token` (or the name you use) from the request and treat that value as the Bearer token for authentication. No change is needed in the frontend beyond `VITE_API_USE_CREDENTIALS=true`.
+  3. **Same origin or CORS:** The cookie is only sent if the request is same-origin or the API allows credentials (CORS `Access-Control-Allow-Credentials: true` and a specific `Access-Control-Allow-Origin`, not `*`). If you use the dev proxy so the app and API share the same origin in the browser, the cookie is sent automatically.
+
 - **Testing when the server uses HttpOnly cookie:** From localhost you cannot read that cookie. To call QA (e.g. `https://qa.api.gresst.com`) with a Bearer token:
   1. Get a token (e.g. log in via **Swagger UI** at the API base URL and copy the token from the response or from the “Authorize” dialog).
   2. In `.env` set `VITE_DEV_BEARER_TOKEN=<paste the token>` (no `Bearer ` prefix). Do **not** commit `.env`.

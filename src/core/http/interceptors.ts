@@ -30,12 +30,28 @@ function getDevBearerToken(): string | null {
   return token.startsWith('Bearer ') ? token.slice(7) : token;
 }
 
+const DEFAULT_AUTH_COOKIE_NAME = 'gresst_access_token';
+
+/** Reads a cookie by name (only works for non-HttpOnly cookies). Used when token is set by another app. */
+function getCookieToken(): string | null {
+  try {
+    const raw = import.meta.env['VITE_AUTH_COOKIE_NAME'];
+    const name = (typeof raw === 'string' && raw.trim() !== '' ? raw.trim() : DEFAULT_AUTH_COOKIE_NAME);
+    const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}=([^;]*)`));
+    const value = match && match[1] !== undefined ? decodeURIComponent(match[1]).trim() : null;
+    return value && value.length > 0 ? value : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Request interceptor: add JWT to headers (and optionally set credentials).
- * Token is read from storage (browser-side only). In dev, VITE_DEV_BEARER_TOKEN is used when storage is empty.
+ * Token source order: localStorage, then VITE_DEV_BEARER_TOKEN, then cookie (VITE_AUTH_COOKIE_NAME, default gresst_access_token).
+ * Cookie is only read if not HttpOnly; otherwise set VITE_API_USE_CREDENTIALS=true and let the backend read the cookie.
  */
 export function runRequestInterceptors(config: RequestConfig): RequestConfig {
-  const token = getStoredToken() || getDevBearerToken();
+  const token = getStoredToken() || getDevBearerToken() || getCookieToken();
   if (token) {
     config.headers.set(TOKEN_HEADER, `Bearer ${token}`);
   }
