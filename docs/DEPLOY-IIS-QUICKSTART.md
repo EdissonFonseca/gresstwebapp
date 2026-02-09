@@ -116,7 +116,14 @@ If you want to deploy once from your PC without using Actions:
 
 ---
 
-## 6. Rollback
+## 6. Troubleshooting: 403 Forbidden or wrong favicon/icons
+
+- **403 Forbidden:** The app pool identity needs **Read** permission on the **entire** site folder (including `favicon.png`, `assets/`, and all files). In Windows Explorer, right‑click the site folder → **Properties** → **Security** → ensure the app pool user (e.g. `IIS AppPool\YourAppPoolName`) has **Read** (and **Read & execute**). Apply to “This folder, subfolders and files”.
+- **Wrong favicon or sidebar icons:** Deploy the **latest** build. Run `npm run build` and copy the **full** contents of `dist/` (do not skip `favicon.png` or `assets/`). Clear the browser cache or do a hard refresh (Ctrl+F5). The favicon is `favicon.png` in the site root; the menu and home icons are in the main JS bundle.
+
+---
+
+## 7. Rollback
 
 - **From GitHub:** Actions → **Rollback IIS** → Run workflow. This swaps the current site folder with `_previous`.
 - **On the server:** Run the PowerShell script (adjust path as needed):

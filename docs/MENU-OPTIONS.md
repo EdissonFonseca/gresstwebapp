@@ -10,7 +10,18 @@ Each row in the Excel (or each object in the JSON) must have:
 |--------------------|--------|-------------|
 | `idOpcionSuperior` | number | Group id. Menu is ordered by this; items with the same id are in the same subdivision. |
 | `descripcion`      | string | Label of the menu option (the only clickable text). |
-| `url`              | string | Internal path (e.g. `/`, `/profile`) or full URL (e.g. `https://...`). External URLs open in a new tab. |
+| `url`              | string | Internal path (e.g. `/`), **path only** (e.g. `Solicitudes.aspx` — then **`VITE_MENU_BASE_URL`** is prepended), or full URL (e.g. `https://...`). |
+
+## QA vs prod: one base URL
+
+Set **`VITE_MENU_BASE_URL`** to the gestor base; use **only the path** (e.g. `Recoleccion.aspx`) in each option’s `url`. The same `VITE_MENU_OPTIONS` JSON works in both environments.
+
+| Env  | `VITE_MENU_BASE_URL`           |
+|------|--------------------------------|
+| QA   | `https://qa.gestor.gresst.com` |
+| Prod | `https://gestor.gresst.com`    |
+
+Example: `"url": "Recoleccion.aspx"` → QA: `https://qa.gestor.gresst.com/Recoleccion.aspx`, Prod: `https://gestor.gresst.com/Recoleccion.aspx`.
 
 ## How to configure
 
@@ -23,16 +34,16 @@ Each row in the Excel (or each object in the JSON) must have:
    ```json
    [
      { "idOpcionSuperior": 1, "descripcion": "Inicio", "url": "/" },
-     { "idOpcionSuperior": 1, "descripcion": "Perfil", "url": "/profile" },
-     { "idOpcionSuperior": 2, "descripcion": "Solicitudes", "url": "https://qa.gestor.gresst.com/Solicitudes.aspx" }
+     { "idOpcionSuperior": 2, "descripcion": "Solicitudes", "url": "Solicitudes.aspx" }
    ]
    ```
 
 3. **Set env**  
-   Put that JSON in the env variable **`VITE_MENU_OPTIONS`** (single line, no line breaks), for example in `.env`:
+   Set **`VITE_MENU_BASE_URL`** (e.g. `https://qa.gestor.gresst.com` or `https://gestor.gresst.com`). Put the JSON in **`VITE_MENU_OPTIONS`** (single line), for example in `.env`:
 
    ```env
-   VITE_MENU_OPTIONS=[{"idOpcionSuperior":1,"descripcion":"Inicio","url":"/"},{"idOpcionSuperior":1,"descripcion":"Perfil","url":"/profile"},{"idOpcionSuperior":2,"descripcion":"Solicitudes","url":"https://qa.gestor.gresst.com/Solicitudes.aspx"}]
+   VITE_MENU_BASE_URL=https://qa.gestor.gresst.com
+   VITE_MENU_OPTIONS=[{"idOpcionSuperior":1,"descripcion":"Inicio","url":"/"},{"idOpcionSuperior":2,"descripcion":"Solicitudes","url":"Solicitudes.aspx"}]
    ```
 
 4. **Build / run**  

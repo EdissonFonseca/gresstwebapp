@@ -18,9 +18,26 @@ export interface MenuOptionGroup {
 }
 
 /**
+ * Resolves a menu option URL: if it's absolute (http/https) return as-is; if it's "/" (home) return "/";
+ * otherwise prepend VITE_MENU_BASE_URL so QA and prod only differ by that env var.
+ */
+function resolveMenuUrl(url: string): string {
+  const trimmed = url.trim();
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
+  if (trimmed === '/') return '/';
+  const base = import.meta.env['VITE_MENU_BASE_URL'];
+  if (typeof base === 'string' && base.trim() !== '') {
+    const baseClean = base.trim().replace(/\/+$/, '');
+    const path = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+    return `${baseClean}${path}`;
+  }
+  return trimmed;
+}
+
+/**
  * Parses VITE_MENU_OPTIONS (JSON array of { idOpcionSuperior, descripcion, url }).
+ * Url can be: internal "/" or path like "Recoleccion.aspx" (then VITE_MENU_BASE_URL is prepended), or full https://...
  * Returns groups sorted by idOpcionSuperior; each group contains items with that id.
- * Export from Excel: columns IdOpcionSuperior, Descripcion, Url.
  */
 export function getMenuOptionGroups(): MenuOptionGroup[] {
   const raw = import.meta.env['VITE_MENU_OPTIONS'];
@@ -35,7 +52,7 @@ export function getMenuOptionGroups(): MenuOptionGroup[] {
         typeof (item as MenuOption).idOpcionSuperior === 'number' &&
         typeof (item as MenuOption).descripcion === 'string' &&
         typeof (item as MenuOption).url === 'string'
-    );
+    ).map((opt) => ({ ...opt, url: resolveMenuUrl(opt.url) }));
     const byGroup = new Map<number, MenuOption[]>();
     for (const opt of options) {
       const list = byGroup.get(opt.idOpcionSuperior) ?? [];
