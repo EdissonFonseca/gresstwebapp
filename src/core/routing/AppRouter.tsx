@@ -26,10 +26,36 @@ function UserProfileRoute() {
   );
 }
 
+/**
+ * Root route (/): show login when unauthenticated so "direct" entry always shows login.
+ * When authenticated, show main layout + home (no redirect to /login).
+ */
+function RootRoute() {
+  const { status } = useAuthContext();
+
+  if (status === 'unauthenticated') {
+    return <LoginPage />;
+  }
+
+  if (status === 'loading') {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center' }} aria-busy="true">
+        Cargando…
+      </div>
+    );
+  }
+
+  return (
+    <MainLayout>
+      <HomeRoute />
+    </MainLayout>
+  );
+}
+
 function LoginRoute() {
   const { status } = useAuthContext();
   const [searchParams] = useSearchParams();
-  const returnUrl = searchParams.get('returnUrl') ?? ROUTES.userProfile;
+  const returnUrl = searchParams.get('returnUrl') ?? ROUTES.home;
 
   if (status === 'authenticated') {
     return <Navigate to={returnUrl} replace />;
@@ -50,9 +76,9 @@ export function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path={ROUTES.home} element={<RootRoute />} />
         <Route path={ROUTES.login} element={<LoginRoute />} />
         <Route element={<RequireAuth><MainLayout /></RequireAuth>}>
-          <Route path={ROUTES.home} element={<HomeRoute />} />
           <Route
             path={ROUTES.userProfile}
             element={
