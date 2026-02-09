@@ -7,8 +7,7 @@
 
 import { createHttpError, handleResponseError } from './errors';
 import { runRequestInterceptors } from './interceptors';
-import { buildApiUrl } from './config';
-import { useCredentials } from './config';
+import { buildApiUrl, getUseCredentials } from './config';
 import { apiLogRequest, apiLogResponse } from './apiDebugLog';
 
 export type { HttpError } from './errors';
@@ -40,7 +39,7 @@ export async function request<T>(
     method,
     headers,
     body,
-    credentials: useCredentials ? 'include' : 'same-origin',
+    credentials: getUseCredentials() ? 'include' : 'same-origin',
   });
 
   const credentials = config.credentials ?? 'same-origin';

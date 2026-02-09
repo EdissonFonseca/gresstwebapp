@@ -3,6 +3,7 @@
  * Runs in browser only; token from storage (headers). Optional cookie mode via config.
  */
 
+import { getAuthCookieName } from '@core/config/runtimeConfig';
 import { getStoredToken } from '@core/auth/storage';
 
 export interface RequestConfig {
@@ -22,13 +23,10 @@ export interface ResponseContext {
 
 const TOKEN_HEADER = 'Authorization';
 
-const DEFAULT_AUTH_COOKIE_NAME = 'gresst_access_token';
-
 /** Reads a cookie by name (only works for non-HttpOnly cookies). Used when token is set by another app. */
 function getCookieToken(): string | null {
   try {
-    const raw = import.meta.env['VITE_AUTH_COOKIE_NAME'];
-    const name = (typeof raw === 'string' && raw.trim() !== '' ? raw.trim() : DEFAULT_AUTH_COOKIE_NAME);
+    const name = getAuthCookieName();
     const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}=([^;]*)`));
     const value = match && match[1] !== undefined ? decodeURIComponent(match[1]).trim() : null;
     return value && value.length > 0 ? value : null;
@@ -39,8 +37,8 @@ function getCookieToken(): string | null {
 
 /**
  * Request interceptor: add JWT to headers (and optionally set credentials).
- * Token source order: localStorage, then cookie (VITE_AUTH_COOKIE_NAME, default gresst_access_token).
- * Cookie is only read if not HttpOnly; otherwise set VITE_API_USE_CREDENTIALS=true and let the backend read the cookie.
+ * Token source order: localStorage, then cookie (name from config.json or .env).
+ * Cookie is only read if not HttpOnly; otherwise set useCredentials in config and let the backend read the cookie.
  */
 export function runRequestInterceptors(config: RequestConfig): RequestConfig {
   const token = getStoredToken() || getCookieToken();

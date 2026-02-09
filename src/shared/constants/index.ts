@@ -2,6 +2,12 @@
  * App-wide constants (not feature-specific).
  */
 
+import {
+  getMenuBaseUrl,
+  getMenuExternalLinksFromConfig,
+  getMenuOptionsFromConfig,
+} from '@core/config/runtimeConfig';
+
 export const APP_NAME = 'Gresst WebApp';
 
 /** Single menu option (from Opciones Gresst.xlsx: IdOpcionSuperior + descripcion + url). */
@@ -19,15 +25,14 @@ export interface MenuOptionGroup {
 
 /**
  * Resolves a menu option URL: if it's absolute (http/https) return as-is; if it's "/" (home) return "/";
- * otherwise prepend VITE_MENU_BASE_URL so QA and prod only differ by that env var.
+ * otherwise prepend menuBaseUrl from config.json or .env.
  */
-function resolveMenuUrl(url: string): string {
+function resolveMenuUrl(url: string, menuBaseUrl: string): string {
   const trimmed = url.trim();
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
   if (trimmed === '/') return '/';
-  const base = import.meta.env['VITE_MENU_BASE_URL'];
-  if (typeof base === 'string' && base.trim() !== '') {
-    const baseClean = base.trim().replace(/\/+$/, '');
+  if (menuBaseUrl) {
+    const baseClean = menuBaseUrl.replace(/\/+$/, '');
     const path = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
     return `${baseClean}${path}`;
   }
@@ -35,16 +40,14 @@ function resolveMenuUrl(url: string): string {
 }
 
 /**
- * Parses VITE_MENU_OPTIONS (JSON array of { idOpcionSuperior, descripcion, url }).
- * Url can be: internal "/" or path like "Recoleccion.aspx" (then VITE_MENU_BASE_URL is prepended), or full https://...
+ * Menu options from config.json or .env (VITE_MENU_OPTIONS). URLs resolved with menuBaseUrl.
  * Returns groups sorted by idOpcionSuperior; each group contains items with that id.
  */
 export function getMenuOptionGroups(): MenuOptionGroup[] {
-  const raw = import.meta.env['VITE_MENU_OPTIONS'];
-  if (typeof raw !== 'string' || raw.trim() === '') return [];
+  const menuBaseUrl = getMenuBaseUrl();
+  const parsed = getMenuOptionsFromConfig();
+  if (!parsed || !Array.isArray(parsed)) return [];
   try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
     const options = parsed.filter(
       (item): item is MenuOption =>
         typeof item === 'object' &&
@@ -52,7 +55,7 @@ export function getMenuOptionGroups(): MenuOptionGroup[] {
         typeof (item as MenuOption).idOpcionSuperior === 'number' &&
         typeof (item as MenuOption).descripcion === 'string' &&
         typeof (item as MenuOption).url === 'string'
-    ).map((opt) => ({ ...opt, url: resolveMenuUrl(opt.url) }));
+    ).map((opt) => ({ ...opt, url: resolveMenuUrl(opt.url, menuBaseUrl) }));
     const byGroup = new Map<number, MenuOption[]>();
     for (const opt of options) {
       const list = byGroup.get(opt.idOpcionSuperior) ?? [];
@@ -148,24 +151,16 @@ export interface MenuExternalLink {
 }
 
 /**
- * Parses VITE_MENU_EXTERNAL_LINKS (JSON array of { label, url }) for sidebar.
- * QA example: [{"label":"Solicitudes","url":"https://qa.gestor.gresst.com/Solicitudes.aspx"}]
- * Prod example: [{"label":"Gestor","url":"https://gestor.gresst.com/Home.aspx"}]
+ * External menu links from config.json or .env (VITE_MENU_EXTERNAL_LINKS) for sidebar.
  */
 export function getMenuExternalLinks(): MenuExternalLink[] {
-  const raw = import.meta.env['VITE_MENU_EXTERNAL_LINKS'];
-  if (typeof raw !== 'string' || raw.trim() === '') return [];
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (item): item is MenuExternalLink =>
-        typeof item === 'object' &&
-        item !== null &&
-        typeof (item as MenuExternalLink).label === 'string' &&
-        typeof (item as MenuExternalLink).url === 'string'
-    );
-  } catch {
-    return [];
-  }
+  const parsed = getMenuExternalLinksFromConfig();
+  if (!parsed || !Array.isArray(parsed)) return [];
+  return parsed.filter(
+    (item): item is MenuExternalLink =>
+      typeof item === 'object' &&
+      item !== null &&
+      typeof (item as MenuExternalLink).label === 'string' &&
+      typeof (item as MenuExternalLink).url === 'string'
+  );
 }

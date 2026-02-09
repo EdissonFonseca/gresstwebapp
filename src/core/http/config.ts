@@ -1,23 +1,20 @@
 /**
- * HTTP client config. All values from env; no hardcoded backend URLs.
- * Ensures browser-side, decoupled from any legacy backend.
+ * HTTP client config. Reads from runtime config (config.json) with build-time .env fallback.
+ * In dist, override via config.json per environment (e.g. IIS) without rebuilding.
  */
 
-/** Base URL for API. Set VITE_API_BASE_URL in .env (e.g. https://api.example.com). */
-export const apiBaseUrl = ((): string => {
-  const url = import.meta.env['VITE_API_BASE_URL'];
-  if (typeof url === 'string' && url.length > 0) return url.replace(/\/$/, '');
-  return '';
-})();
-
-/** Send cookies with requests when true (e.g. when backend sets httpOnly cookie). */
-export const useCredentials = import.meta.env['VITE_API_USE_CREDENTIALS'] === 'true';
+import { getApiBaseUrl as getRuntimeApiBaseUrl, getUseCredentials as getRuntimeUseCredentials } from '@core/config/runtimeConfig';
 
 export function buildApiUrl(path: string): string {
   if (path.startsWith('http://') || path.startsWith('https://')) {
     return path;
   }
-  const base = apiBaseUrl;
+  const base = getRuntimeApiBaseUrl();
   const normalized = path.startsWith('/') ? path : `/${path}`;
   return base ? `${base}${normalized}` : normalized;
+}
+
+/** Send cookies with requests when true. Resolved from config.json or .env. */
+export function getUseCredentials(): boolean {
+  return getRuntimeUseCredentials();
 }

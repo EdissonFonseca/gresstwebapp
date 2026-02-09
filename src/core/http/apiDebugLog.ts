@@ -1,9 +1,9 @@
 /**
- * Debug log for API requests (Me/Profile and others). Enabled when VITE_DEBUG_API_LOG=true.
+ * Debug log for API requests (Me/Profile and others). Enabled via config.json debugApiLog or .env VITE_DEBUG_API_LOG.
  * Collects request/response info; user can download as a file to verify URL, credentials, CORS, etc.
  */
 
-const DEBUG_ENABLED = import.meta.env['VITE_DEBUG_API_LOG'] === 'true';
+import { getApiBaseUrl, getUseCredentials, isDebugApiLog } from '@core/config/runtimeConfig';
 
 interface LogEntry {
   ts: string;
@@ -25,7 +25,7 @@ export function apiLogRequest(params: {
   credentials: RequestCredentials;
   hasAuthHeader: boolean;
 }): void {
-  if (!DEBUG_ENABLED) return;
+  if (!isDebugApiLog()) return;
   entries.push({
     ts: new Date().toISOString(),
     type: 'request',
@@ -45,7 +45,7 @@ export function apiLogResponse(params: {
   ok: boolean;
   errorBody?: unknown;
 }): void {
-  if (!DEBUG_ENABLED) return;
+  if (!isDebugApiLog()) return;
   const bodyStr =
     params.errorBody !== undefined
       ? typeof params.errorBody === 'object'
@@ -63,7 +63,7 @@ export function apiLogResponse(params: {
 }
 
 export function apiLogInfo(message: string, detail?: string): void {
-  if (!DEBUG_ENABLED) return;
+  if (!isDebugApiLog()) return;
   entries.push({
     ts: new Date().toISOString(),
     type: 'info',
@@ -76,8 +76,8 @@ export function getApiLogAsString(): string {
   const header = [
     'API debug log',
     `Generated: ${new Date().toISOString()}`,
-    `VITE_API_BASE_URL: ${import.meta.env['VITE_API_BASE_URL'] ?? '(empty)'}`,
-    `VITE_API_USE_CREDENTIALS: ${import.meta.env['VITE_API_USE_CREDENTIALS'] ?? 'not set'}`,
+    `apiBaseUrl: ${getApiBaseUrl() || '(empty)'}`,
+    `useCredentials: ${getUseCredentials()}`,
     '---',
   ].join('\n');
   return [header, ...entries.map(line)].join('\n');
@@ -95,5 +95,5 @@ export function downloadApiLogAsFile(): void {
 }
 
 export function isApiDebugLogEnabled(): boolean {
-  return DEBUG_ENABLED;
+  return isDebugApiLog();
 }

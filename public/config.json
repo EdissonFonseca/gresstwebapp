@@ -1,0 +1,7 @@
+{
+  "apiBaseUrl": "",
+  "useCredentials": true,
+  "menuBaseUrl": "https://gestor.qa.gresst.com",
+  "authCookieName": "gresst_access_token",
+  "debugApiLog": false
+}

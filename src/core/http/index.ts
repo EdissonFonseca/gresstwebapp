@@ -9,7 +9,7 @@ export {
   AUTH_UNAUTHORIZED_EVENT,
 } from './client';
 export type { HttpError } from './client';
-export { apiBaseUrl, buildApiUrl } from './config';
+export { buildApiUrl, getUseCredentials } from './config';
 export {
   downloadApiLogAsFile,
   getApiLogAsString,
