@@ -74,6 +74,32 @@
   z-index: 100;
 }
 
+.user-menu__account {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.5rem 1rem;
+  margin: 0 0.25rem 0.25rem;
+  background: var(--user-menu-account-bg, #f1f5f9);
+  border-radius: 0.25rem;
+  cursor: default;
+  pointer-events: none;
+}
+
+.user-menu__account-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-muted-text, #6b7280);
+}
+
+.user-menu__account-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--dropdown-fg, #374151);
+}
+
 .user-menu__item {
   display: flex;
   align-items: center;

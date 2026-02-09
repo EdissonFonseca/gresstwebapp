@@ -10,7 +10,7 @@ export interface UseLoginResult {
 }
 
 export function useLogin(): UseLoginResult {
-  const { setToken } = useAuthContext();
+  const { setToken, setUserInfo } = useAuthContext();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,6 +27,11 @@ export function useLogin(): UseLoginResult {
           return;
         }
         setToken(res.accessToken);
+        const displayName = res.name?.trim() ?? '';
+        const accountName = res.accountName?.trim() ?? '';
+        if (displayName || accountName) {
+          setUserInfo(displayName, accountName);
+        }
       } catch (e) {
         const message = e instanceof Error ? e.message : 'Login failed';
         setError(message);
@@ -34,7 +39,7 @@ export function useLogin(): UseLoginResult {
         setIsLoading(false);
       }
     },
-    [setToken]
+    [setToken, setUserInfo]
   );
 
   return { submit, isLoading, error, clearError };

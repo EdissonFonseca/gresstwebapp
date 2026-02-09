@@ -11,6 +11,8 @@ vi.mock('../services/profileApi', () => ({
 describe('useUserProfile', () => {
   const mockProfile: UserProfile = {
     id: '1',
+    firstName: 'Hook',
+    lastName: 'User',
     email: 'hook@example.com',
     displayName: 'Hook User',
   };

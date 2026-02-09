@@ -11,16 +11,18 @@ import type { UserProfile } from '../types';
 
 vi.mock('../services/profileApi', () => ({
   fetchUserProfile: vi.fn(),
+  updateUserProfile: vi.fn(),
 }));
 
 function UserProfileRoute() {
-  const { profile, isLoading, error, retry } = useUserProfile();
+  const { profile, isLoading, error, retry, saveProfile } = useUserProfile();
   return (
     <UserProfilePage
       profile={profile}
       isLoading={isLoading}
       error={error}
       onRetry={retry}
+      onSaveProfile={saveProfile}
     />
   );
 }
@@ -28,6 +30,8 @@ function UserProfileRoute() {
 describe('User profile feature (integration)', () => {
   const mockProfile: UserProfile = {
     id: '1',
+    firstName: 'Integration',
+    lastName: 'User',
     email: 'integration@example.com',
     displayName: 'Integration User',
   };
@@ -52,7 +56,8 @@ describe('User profile feature (integration)', () => {
     expect(screen.getByText(/Loading/)).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByText('Integration User')).toBeInTheDocument();
+      expect(screen.getByText('Integration')).toBeInTheDocument();
+      expect(screen.getByText('User')).toBeInTheDocument();
     });
 
     expect(screen.getByText('integration@example.com')).toBeInTheDocument();
@@ -84,7 +89,8 @@ describe('User profile feature (integration)', () => {
     await user.click(screen.getByRole('button', { name: 'Retry' }));
 
     await waitFor(() => {
-      expect(screen.getByText('Integration User')).toBeInTheDocument();
+      expect(screen.getByText('Integration')).toBeInTheDocument();
+      expect(screen.getByText('User')).toBeInTheDocument();
     });
   });
 });

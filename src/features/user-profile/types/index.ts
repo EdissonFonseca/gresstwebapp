@@ -17,13 +17,22 @@ export interface ProfileApiResponse {
   createdAt: string;
 }
 
-/** Internal/display profile (mapped from API). Only name and email are shown in the UI. */
+/** Internal/display profile (mapped from API). */
 export interface UserProfile {
   id: string;
+  firstName: string;
+  lastName: string;
   email: string;
   displayName: string;
   avatarUrl?: string | null;
   createdAt?: string;
+}
+
+/** Payload for PUT /api/me/profile */
+export interface UpdateProfilePayload {
+  firstName: string;
+  lastName: string;
+  email: string;
 }
 
 export interface UserProfilePageProps {
@@ -31,6 +40,7 @@ export interface UserProfilePageProps {
   isLoading: boolean;
   error: string | null;
   onRetry?: () => void;
+  onSaveProfile?: (payload: UpdateProfilePayload) => Promise<void>;
 }
 
 export type UserProfileState =

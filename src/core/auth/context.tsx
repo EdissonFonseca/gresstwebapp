@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { AUTH_UNAUTHORIZED_EVENT } from '@core/http/errors';
+import { fetchMe } from './meApi';
 import { clearStoredToken, getStoredToken, setStoredToken } from './storage';
 import { parseUserFromToken } from './jwt';
 import type { AuthState } from './types';
@@ -23,6 +24,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(parsed ?? { id: 'unknown', email: undefined });
   }, []);
 
+  const setUserInfo = useCallback((displayName: string, accountName?: string) => {
+    setUser((prev) =>
+      prev
+        ? { ...prev, displayName: displayName.trim() || prev.displayName, accountName: accountName?.trim() || prev.accountName }
+        : null
+    );
+  }, []);
+
   const logout = useCallback(() => {
     clearStoredToken();
     setTokenState(null);
@@ -39,6 +48,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+    fetchMe()
+      .then((data) => {
+        if (cancelled) return;
+        const displayName = data.profile?.name?.trim() ?? '';
+        const accountName = data.account?.name?.trim() ?? '';
+        if (displayName || accountName) {
+          setUser((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  ...(displayName && { displayName }),
+                  ...(accountName && { accountName }),
+                }
+              : null
+          );
+        }
+      })
+      .catch(() => {
+        // Keep user from JWT; names may stay from login or remain undefined
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
+
+  useEffect(() => {
     const handler = () => logout();
     window.addEventListener(AUTH_UNAUTHORIZED_EVENT, handler);
     return () => window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, handler);
@@ -50,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     token,
     setToken,
+    setUserInfo,
     logout,
   };
 

@@ -18,6 +18,7 @@ export interface LoginResponse {
   subjectType: string;
   userId: string;
   accountId: string;
+  accountName?: string;
   accountPersonId: string;
   personId: string;
   name: string;

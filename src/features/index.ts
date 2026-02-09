@@ -4,5 +4,6 @@
  */
 
 export * from './auth';
+export * from './change-password';
 export * from './home';
 export * from './user-profile';

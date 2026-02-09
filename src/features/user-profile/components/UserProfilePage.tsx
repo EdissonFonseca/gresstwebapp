@@ -14,6 +14,7 @@ export function UserProfilePage({
   isLoading = false,
   error = null,
   onRetry,
+  onSaveProfile,
 }: UserProfilePageProps) {
   if (isLoading) {
     return (
@@ -63,7 +64,7 @@ export function UserProfilePage({
   return (
     <div className="user-profile-page">
       <h1>Profile</h1>
-      <ProfileCard profile={profile} />
+      <ProfileCard profile={profile} onSave={onSaveProfile} />
     </div>
   );
 }

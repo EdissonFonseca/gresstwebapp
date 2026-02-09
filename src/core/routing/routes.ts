@@ -6,6 +6,7 @@ export const ROUTES = {
   home: '/',
   login: '/login',
   userProfile: '/profile',
+  changePassword: '/cambiar-contrasena',
   notFound: '/404',
 } as const;
 

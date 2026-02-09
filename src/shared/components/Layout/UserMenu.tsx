@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   FaUser,
-  FaCog,
   FaKey,
   FaSignOutAlt,
   FaAddressCard,
@@ -21,10 +20,9 @@ const ACCOUNT_ADMIN_ROLES = ['AccountAdministrator', 'Admin', 'Administrator'];
 /** Set to true to show "Administrar cuenta" for all users (e.g. while implementing). Set to false to gate by role. */
 const SHOW_ACCOUNT_ADMIN_TO_ALL = true;
 
-/** Standard user options (profile, account settings, password). */
+/** Standard user options (profile, password). */
 const USER_MENU_OPTIONS = [
   { label: 'Mi perfil', path: '/profile', id: 'profile', Icon: FaUser },
-  { label: 'Ajustes de cuenta', path: '/cuenta', id: 'account', Icon: FaCog },
   { label: 'Cambiar contraseña', path: '/cambiar-contrasena', id: 'password', Icon: FaKey },
 ] as const;
 
@@ -47,7 +45,8 @@ export function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const displayName = user?.displayName ?? user?.email ?? 'Usuario';
+  const displayName = user?.displayName?.trim() || user?.email || 'Usuario';
+  const accountName = user?.accountName?.trim();
   const isAccountAdmin =
     SHOW_ACCOUNT_ADMIN_TO_ALL ||
     (user?.role != null && ACCOUNT_ADMIN_ROLES.includes(user.role));
@@ -90,6 +89,13 @@ export function UserMenu() {
       </button>
       {isOpen && (
         <div className="user-menu__dropdown" role="menu">
+          {accountName && (
+            <div className="user-menu__account" role="presentation" aria-label="Account name">
+              <span className="user-menu__account-label">Cuenta</span>
+              <span className="user-menu__account-name">{accountName}</span>
+            </div>
+          )}
+          {accountName && <div className="user-menu__separator" role="separator" />}
           {USER_MENU_OPTIONS.map(({ label, path, id, Icon }) => (
             <Link
               key={id}

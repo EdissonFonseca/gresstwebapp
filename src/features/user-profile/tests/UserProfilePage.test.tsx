@@ -5,6 +5,8 @@ import type { UserProfile } from '../types';
 
 const mockProfile: UserProfile = {
   id: '1',
+  firstName: 'Test',
+  lastName: 'User',
   email: 'user@example.com',
   displayName: 'Test User',
 };
@@ -50,7 +52,8 @@ describe('UserProfilePage', () => {
       />
     );
     expect(screen.getByRole('heading', { name: 'Profile' })).toBeInTheDocument();
-    expect(screen.getByText('Test User')).toBeInTheDocument();
+    expect(screen.getByText('Test')).toBeInTheDocument();
+    expect(screen.getByText('User')).toBeInTheDocument();
     expect(screen.getByText('user@example.com')).toBeInTheDocument();
   });
 

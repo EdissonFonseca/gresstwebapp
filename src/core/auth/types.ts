@@ -7,8 +7,10 @@ export type AuthStatus = 'idle' | 'authenticated' | 'unauthenticated' | 'loading
 export interface AuthUser {
   id: string;
   email?: string;
-  /** Display name (e.g. from JWT unique_name). */
+  /** Display name (from login response or GET /api/me profile.name). */
   displayName?: string;
+  /** Account name (from login response or GET /api/me account.name). */
+  accountName?: string;
   /** Role from JWT (e.g. "User", "AccountAdministrator"). Used for UI (e.g. show admin menu). */
   role?: string;
   [key: string]: unknown;
@@ -19,5 +21,7 @@ export interface AuthState {
   user: AuthUser | null;
   token: string | null;
   setToken: (token: string) => void;
+  /** Update display name and account name (e.g. from login or /api/me). */
+  setUserInfo: (displayName: string, accountName?: string) => void;
   logout: () => void;
 }

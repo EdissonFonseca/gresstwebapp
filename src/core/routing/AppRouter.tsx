@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes, useSearchParams } from 'react-r
 import { MainLayout } from '@shared/components/Layout';
 import { useAuthContext } from '@core/auth';
 import { LoginPage } from '@features/auth';
+import { ChangePasswordPage } from '@features/change-password';
 import { HomePage, useHome } from '@features/home';
 import { UserProfilePage, useUserProfile } from '@features/user-profile';
 import { ROUTES } from './routes';
@@ -15,13 +16,14 @@ function HomeRoute() {
 }
 
 function UserProfileRoute() {
-  const { profile, isLoading, error, retry } = useUserProfile();
+  const { profile, isLoading, error, retry, saveProfile } = useUserProfile();
   return (
     <UserProfilePage
       profile={profile}
       isLoading={isLoading}
       error={error}
       onRetry={retry}
+      onSaveProfile={saveProfile}
     />
   );
 }
@@ -92,6 +94,14 @@ export function AppRouter() {
             element={
               <RouteErrorBoundary>
                 <UserProfileRoute />
+              </RouteErrorBoundary>
+            }
+          />
+          <Route
+            path={ROUTES.changePassword}
+            element={
+              <RouteErrorBoundary>
+                <ChangePasswordPage />
               </RouteErrorBoundary>
             }
           />
