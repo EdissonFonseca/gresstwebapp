@@ -4,6 +4,7 @@
 
 export const ROUTES = {
   home: '/',
+  login: '/login',
   userProfile: '/profile',
   notFound: '/404',
 } as const;

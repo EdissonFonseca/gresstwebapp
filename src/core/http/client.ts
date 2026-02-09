@@ -9,6 +9,7 @@ import { createHttpError, handleResponseError } from './errors';
 import { runRequestInterceptors } from './interceptors';
 import { buildApiUrl } from './config';
 import { useCredentials } from './config';
+import { apiLogRequest, apiLogResponse } from './apiDebugLog';
 
 export type { HttpError } from './errors';
 export { setGlobalErrorHandler, AUTH_UNAUTHORIZED_EVENT } from './errors';
@@ -42,18 +43,40 @@ export async function request<T>(
     credentials: useCredentials ? 'include' : 'same-origin',
   });
 
+  const credentials = config.credentials ?? 'same-origin';
+  apiLogRequest({
+    url: config.url,
+    method: config.method,
+    credentials,
+    hasAuthHeader: config.headers.has('Authorization'),
+  });
+
   const res = await fetch(config.url, {
     method: config.method,
     headers: config.headers,
     body: config.body,
-    credentials: config.credentials ?? 'same-origin',
+    credentials,
     signal: options?.signal,
   });
 
   if (!res.ok) {
     const bodyResult = await parseErrorBody(res);
+    apiLogResponse({
+      url: config.url,
+      status: res.status,
+      statusText: res.statusText,
+      ok: false,
+      errorBody: bodyResult,
+    });
     const error = createHttpError(res.status, res.statusText, bodyResult);
     handleResponseError(error);
+  } else {
+    apiLogResponse({
+      url: config.url,
+      status: res.status,
+      statusText: res.statusText,
+      ok: true,
+    });
   }
 
   const contentType = res.headers.get('Content-Type');

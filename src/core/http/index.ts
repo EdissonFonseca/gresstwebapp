@@ -10,3 +10,8 @@ export {
 } from './client';
 export type { HttpError } from './client';
 export { apiBaseUrl, buildApiUrl } from './config';
+export {
+  downloadApiLogAsFile,
+  getApiLogAsString,
+  isApiDebugLogEnabled,
+} from './apiDebugLog';

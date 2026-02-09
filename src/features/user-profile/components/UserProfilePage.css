@@ -11,6 +11,28 @@
   color: var(--color-error, #b91c1c);
 }
 
+.user-profile-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.user-profile-page__actions button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--layout-border, #e5e7eb);
+  background: var(--color-bg, #fff);
+  cursor: pointer;
+}
+
+.user-profile-page__hint {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-muted-text, #6b7280);
+}
+
 .profile-card {
   max-width: 28rem;
   padding: 1.5rem;

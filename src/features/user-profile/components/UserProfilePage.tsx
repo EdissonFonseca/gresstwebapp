@@ -1,3 +1,7 @@
+import {
+  downloadApiLogAsFile,
+  isApiDebugLogEnabled,
+} from '@core/http';
 import type { UserProfilePageProps } from '../types';
 import { ProfileCard } from './ProfileCard';
 import './UserProfilePage.css';
@@ -27,11 +31,22 @@ export function UserProfilePage({
         <p className="user-profile-page__error" role="alert">
           {error}
         </p>
-        {onRetry && (
-          <button type="button" onClick={onRetry}>
-            Retry
-          </button>
-        )}
+        <div className="user-profile-page__actions">
+          {onRetry && (
+            <button type="button" onClick={onRetry}>
+              Retry
+            </button>
+          )}
+          {isApiDebugLogEnabled() ? (
+            <button type="button" onClick={downloadApiLogAsFile}>
+              Download debug log
+            </button>
+          ) : (
+            <p className="user-profile-page__hint">
+              Set VITE_DEBUG_API_LOG=true in .env and retry to capture a debug log file.
+            </p>
+          )}
+        </div>
       </div>
     );
   }
