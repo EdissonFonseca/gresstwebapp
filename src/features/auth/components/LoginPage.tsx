@@ -1,14 +1,15 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useLogin } from '../hooks';
+import logoRegister from '@shared/assets/images/Logo sin letras.png';
 import './LoginPage.css';
 
 const APP_VERSION = '2.0-QA';
 
-/** Small tri-color icon similar to common "new document" / drive-style icon. */
-function RegisterIcon() {
+/** Fallback icon when logo image fails to load. */
+function RegisterIconFallback() {
   return (
     <svg
-      className="login-card__register-icon"
+      className="login-card__register-logo login-card__register-logo--fallback"
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -18,6 +19,27 @@ function RegisterIcon() {
       <path fill="#34A853" d="M12 2v10l10-5V7L12 2z" />
       <path fill="#FBBC05" d="M2 7l10 5 10-5-10-5L2 7z" />
     </svg>
+  );
+}
+
+/** Logo in footer (Logo sin letras from shared assets). */
+function RegisterLogo() {
+  const [failed, setFailed] = useState(false);
+
+  if (failed) {
+    return <RegisterIconFallback />;
+  }
+
+  return (
+    <img
+      src={logoRegister}
+      alt=""
+      className="login-card__register-logo"
+      width={32}
+      height={32}
+      aria-hidden
+      onError={() => setFailed(true)}
+    />
   );
 }
 
@@ -37,8 +59,10 @@ export function LoginPage() {
   return (
     <div className="login-page">
       <div className="login-card">
-        <h1 className="login-card__title">Gestor</h1>
-        <p className="login-card__version">Versión {APP_VERSION}</p>
+        <header className="login-card__header">
+          <h1 className="login-card__title">Gestor</h1>
+          <p className="login-card__version">Versión {APP_VERSION}</p>
+        </header>
 
         <form className="login-form" onSubmit={handleSubmit} noValidate>
           {error && (
@@ -90,7 +114,7 @@ export function LoginPage() {
         </form>
 
         <div className="login-card__register">
-          <RegisterIcon />
+          <RegisterLogo />
           <p className="login-card__register-text">
             No tiene una cuenta? <a href="/register">Regístrese ahora</a>
           </p>

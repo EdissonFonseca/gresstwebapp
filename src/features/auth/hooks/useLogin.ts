@@ -1,5 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useAuthContext } from '@core/auth';
+import { fetchMe } from '@core/auth/meApi';
+import { getUseCredentials } from '@core/config/runtimeConfig';
 import { login as loginApi } from '../services/loginApi';
 
 export interface UseLoginResult {
@@ -10,7 +12,7 @@ export interface UseLoginResult {
 }
 
 export function useLogin(): UseLoginResult {
-  const { setToken, setUserInfo } = useAuthContext();
+  const { setToken, setUserInfo, setSessionFromMe } = useAuthContext();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,15 +24,26 @@ export function useLogin(): UseLoginResult {
       setIsLoading(true);
       try {
         const res = await loginApi({ Username: username.trim(), Password: password });
-        if (!res.success || !res.accessToken) {
+        if (!res.success) {
           setError(res.error ?? 'Login failed');
           return;
         }
-        setToken(res.accessToken);
-        const displayName = res.name?.trim() ?? '';
-        const accountName = res.accountName?.trim() ?? '';
-        if (displayName || accountName) {
-          setUserInfo(displayName, accountName);
+        const useCredentials = getUseCredentials();
+        if (useCredentials) {
+          // Backend sets cookies; we don't store token. Establish session from GET /api/me.
+          const data = await fetchMe();
+          setSessionFromMe(data);
+        } else {
+          if (!res.accessToken) {
+            setError(res.error ?? 'Login failed');
+            return;
+          }
+          setToken(res.accessToken);
+          const displayName = res.name?.trim() ?? '';
+          const accountName = res.accountName?.trim() ?? '';
+          if (displayName || accountName) {
+            setUserInfo(displayName, accountName);
+          }
         }
       } catch (e) {
         const message = e instanceof Error ? e.message : 'Login failed';
@@ -39,7 +52,7 @@ export function useLogin(): UseLoginResult {
         setIsLoading(false);
       }
     },
-    [setToken, setUserInfo]
+    [setToken, setUserInfo, setSessionFromMe]
   );
 
   return { submit, isLoading, error, clearError };

@@ -21,6 +21,8 @@ export interface AuthState {
   user: AuthUser | null;
   token: string | null;
   setToken: (token: string) => void;
+  /** Set session from GET /api/me (e.g. after login when backend uses cookies only). No token stored. */
+  setSessionFromMe: (data: import('./meApi').MeResponse) => void;
   /** Update display name and account name (e.g. from login or /api/me). */
   setUserInfo: (displayName: string, accountName?: string) => void;
   logout: () => void;

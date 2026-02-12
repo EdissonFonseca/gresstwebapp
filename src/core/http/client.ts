@@ -1,13 +1,13 @@
 /**
  * Centralized HTTP client. Browser-side only; base URL from env; no legacy coupling.
- * - JWT in Authorization header (from storage) via request interceptor.
- * - Optional credentials (cookies) via config.
- * - 401 → clear token + auth:unauthorized event; other errors → centralized handler.
+ * - JWT in Authorization header (from storage) when present; credentials (cookies) via config.
+ * - 401: try refresh-token (credentials), then retry request once; if still 401 → auth:unauthorized.
  */
 
 import { createHttpError, handleResponseError } from './errors';
 import { runRequestInterceptors } from './interceptors';
 import { buildApiUrl, getUseCredentials } from './config';
+import { isRefreshRequest, refreshAuthSession } from '@core/auth/refreshApi';
 import { apiLogRequest, apiLogResponse } from './apiDebugLog';
 
 export type { HttpError } from './errors';
@@ -23,6 +23,21 @@ async function parseErrorBody(res: Response): Promise<unknown> {
   } catch {
     return undefined;
   }
+}
+
+async function performFetch(
+  config: { url: string; method: string; headers: Headers; body?: BodyInit | null },
+  credentials: RequestCredentials,
+  signal?: AbortSignal
+): Promise<Response> {
+  const res = await fetch(config.url, {
+    method: config.method,
+    headers: config.headers,
+    body: config.body,
+    credentials,
+    signal,
+  });
+  return res;
 }
 
 export async function request<T>(
@@ -50,13 +65,21 @@ export async function request<T>(
     hasAuthHeader: config.headers.has('Authorization'),
   });
 
-  const res = await fetch(config.url, {
-    method: config.method,
-    headers: config.headers,
-    body: config.body,
-    credentials,
-    signal: options?.signal,
-  });
+  let res = await performFetch(config, credentials, options?.signal ?? undefined);
+
+  if (!res.ok && res.status === 401 && !isRefreshRequest(path)) {
+    const refreshed = await refreshAuthSession();
+    if (refreshed) {
+      const retryConfig = runRequestInterceptors({
+        url,
+        method,
+        headers: new Headers(options?.headers),
+        body,
+        credentials: config.credentials,
+      });
+      res = await performFetch(retryConfig, credentials, options?.signal ?? undefined);
+    }
+  }
 
   if (!res.ok) {
     const bodyResult = await parseErrorBody(res);

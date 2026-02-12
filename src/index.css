@@ -1,7 +1,9 @@
 :root {
-  font-family: system-ui, sans-serif;
+  font-family: 'Roboto', Helvetica, 'Droid Sans', Tahoma, Geneva, sans-serif;
+  font-size: 14px;
   line-height: 1.5;
   font-weight: 400;
+  color: #484848;
 }
 
 body {

@@ -29,8 +29,8 @@ function UserProfileRoute() {
 }
 
 /**
- * Root route (/): show login when unauthenticated so "direct" entry always shows login.
- * When authenticated, show main layout + home (no redirect to /login).
+ * Root route (/): auth tries session first (fetchMe with credentials; 401 → refresh → retry).
+ * Only when session cannot be established we show login. Supports entry from external redirect (cookies).
  */
 function RootRoute() {
   const { status } = useAuthContext();

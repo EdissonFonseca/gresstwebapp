@@ -46,13 +46,19 @@ export default defineConfig(({ mode }) => {
       port: 5173,
       strictPort: false,
       open: true,
-      // Proxy /api to proxyTarget to avoid CORS when backend doesn't allow localhost
+      // Proxy to proxyTarget to avoid CORS (browser talks to Vite; Vite forwards to target)
       proxy: proxyTarget
         ? {
             '/api': {
               target: proxyTarget,
               changeOrigin: true,
-              secure: true,
+              secure: proxyTarget.startsWith('https'),
+            },
+            // e.g. localhost:56386/login.aspx — so requests to /login.aspx go to target
+            '/login.aspx': {
+              target: proxyTarget,
+              changeOrigin: true,
+              secure: proxyTarget.startsWith('https'),
             },
           }
         : undefined,

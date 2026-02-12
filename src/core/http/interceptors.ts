@@ -1,9 +1,10 @@
 /**
  * Request/response interceptors for the HTTP client.
- * Runs in browser only; token from storage (headers). Optional cookie mode via config.
+ * - When we have a token in localStorage we add Authorization header.
+ * - Cookie auth: we do not read the cookie. The app sends credentials (credentials: 'include'
+ *   from client) so the browser sends the cookie; the API treats the request as authenticated.
  */
 
-import { getAuthCookieName } from '@core/config/runtimeConfig';
 import { getStoredToken } from '@core/auth/storage';
 
 export interface RequestConfig {
@@ -23,25 +24,12 @@ export interface ResponseContext {
 
 const TOKEN_HEADER = 'Authorization';
 
-/** Reads a cookie by name (only works for non-HttpOnly cookies). Used when token is set by another app. */
-function getCookieToken(): string | null {
-  try {
-    const name = getAuthCookieName();
-    const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}=([^;]*)`));
-    const value = match && match[1] !== undefined ? decodeURIComponent(match[1]).trim() : null;
-    return value && value.length > 0 ? value : null;
-  } catch {
-    return null;
-  }
-}
-
 /**
- * Request interceptor: add JWT to headers (and optionally set credentials).
- * Token source order: localStorage, then cookie (name from config.json or .env).
- * Cookie is only read if not HttpOnly; otherwise set useCredentials in config and let the backend read the cookie.
+ * Request interceptor: add JWT to headers when we have a token in storage.
+ * For cookie-only auth we rely on credentials: 'include' (no header, cookie sent by browser).
  */
 export function runRequestInterceptors(config: RequestConfig): RequestConfig {
-  const token = getStoredToken() || getCookieToken();
+  const token = getStoredToken();
   if (token) {
     config.headers.set(TOKEN_HEADER, `Bearer ${token}`);
   }

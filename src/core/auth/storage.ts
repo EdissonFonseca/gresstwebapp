@@ -1,8 +1,8 @@
 /**
- * JWT token storage for Authorization header. Browser-side only.
- * - Token is sent via request interceptor (Authorization: Bearer <token>).
- * - For cookie-based auth: set VITE_API_USE_CREDENTIALS=true and have backend set httpOnly cookie;
- *   this storage is unused and no header is sent for auth (credentials: 'include' only).
+ * JWT token storage. Browser-side only.
+ * - When VITE_API_USE_CREDENTIALS is false: token in localStorage is sent (Authorization header).
+ * - When VITE_API_USE_CREDENTIALS is true (cookie auth): we do not read or write token here.
+ *   The app never stores the token; APIs set cookies and the browser sends them with credentials: 'include'.
  */
 
 const TOKEN_KEY = 'app_jwt';
